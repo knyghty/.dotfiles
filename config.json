@@ -1,0 +1,8 @@
+{
+    "link": {
+        "atom/": "~/.atom",
+        "config/fish/": "~/.config/fish",
+        "config/i3/": "~/.config/i3",
+        "weechat/": "~/.weechat"
+    }
+}

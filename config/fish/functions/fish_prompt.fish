@@ -1,81 +1,93 @@
 function fish_prompt --description 'Write out the prompt'
-	
-	if set -q VIRTUAL_ENV
-    		echo -n -s (set_color blue) "(" (basename "$VIRTUAL_ENV") ")" (set_color normal) " "
-	end
+	if not set -q __fish_git_prompt_show_informative_status
+        set -g __fish_git_prompt_show_informative_status 1
+    end
+    if not set -q __fish_git_prompt_hide_untrackedfiles
+        set -g __fish_git_prompt_hide_untrackedfiles 1
+    end
 
-	set -l last_status $status
+    if not set -q __fish_git_prompt_color_branch
+        set -g __fish_git_prompt_color_branch magenta --bold
+    end
+    if not set -q __fish_git_prompt_showupstream
+        set -g __fish_git_prompt_showupstream "informative"
+    end
+    if not set -q __fish_git_prompt_char_upstream_ahead
+        set -g __fish_git_prompt_char_upstream_ahead "↑"
+    end
+    if not set -q __fish_git_prompt_char_upstream_behind
+        set -g __fish_git_prompt_char_upstream_behind "↓"
+    end
+    if not set -q __fish_git_prompt_char_upstream_prefix
+        set -g __fish_git_prompt_char_upstream_prefix ""
+    end
 
-	# Just calculate these once, to save a few cycles when displaying the prompt
-	if not set -q __fish_prompt_hostname
-		set -g __fish_prompt_hostname (hostname|cut -d . -f 1)
-	end
+    if not set -q __fish_git_prompt_char_stagedstate
+        set -g __fish_git_prompt_char_stagedstate "●"
+    end
+    if not set -q __fish_git_prompt_char_dirtystate
+        set -g __fish_git_prompt_char_dirtystate "✚"
+    end
+    if not set -q __fish_git_prompt_char_untrackedfiles
+        set -g __fish_git_prompt_char_untrackedfiles "…"
+    end
+    if not set -q __fish_git_prompt_char_conflictedstate
+        set -g __fish_git_prompt_char_conflictedstate "✖"
+    end
+    if not set -q __fish_git_prompt_char_cleanstate
+        set -g __fish_git_prompt_char_cleanstate "✔"
+    end
 
-	if not set -q __fish_prompt_normal
-		set -g __fish_prompt_normal (set_color normal)
-	end
+    if not set -q __fish_git_prompt_color_dirtystate
+        set -g __fish_git_prompt_color_dirtystate blue
+    end
+    if not set -q __fish_git_prompt_color_stagedstate
+        set -g __fish_git_prompt_color_stagedstate yellow
+    end
+    if not set -q __fish_git_prompt_color_invalidstate
+        set -g __fish_git_prompt_color_invalidstate red
+    end
+    if not set -q __fish_git_prompt_color_untrackedfiles
+        set -g __fish_git_prompt_color_untrackedfiles $fish_color_normal
+    end
+    if not set -q __fish_git_prompt_color_cleanstate
+        set -g __fish_git_prompt_color_cleanstate green --bold
+    end
 
-	if not set -q -g __fish_classic_git_functions_defined
-		set -g __fish_classic_git_functions_defined
+    set -l last_status $status
 
-		function __fish_repaint_user --on-variable fish_color_user --description "Event handler, repaint when fish_color_user changes"
-			if status --is-interactive
-				set -e __fish_prompt_user
-				commandline -f repaint ^ /dev/null
-			end
-		end
+    if not set -q __fish_prompt_normal
+        set -g __fish_prompt_normal (set_color normal)
+    end
 
-		function __fish_repaint_host --on-variable fish_color_host --description "Event handler, repaint when fish_color_host changes"
-			if status --is-interactive
-				set -e __fish_prompt_host
-				commandline -f repaint ^ /dev/null
-			end
-		end
+    set -l color_cwd
+    set -l prefix
+    set -l suffix
+    switch $USER
+        case root toor
+            if set -q fish_color_cwd_root
+                set color_cwd $fish_color_cwd_root
+            else
+                set color_cwd $fish_color_cwd
+            end
+            set suffix '#'
+        case '*'
+            set color_cwd $fish_color_cwd
+            set suffix '$'
+    end
 
-		function __fish_repaint_status --on-variable fish_color_status --description "Event handler; repaint when fish_color_status changes"
-			if status --is-interactive
-				set -e __fish_prompt_status
-				commandline -f repaint ^ /dev/null
-			end
-		end
-	end
+    # PWD
+    set_color $color_cwd
+    echo -n (prompt_pwd)
+    set_color normal
 
-	set -l delim '>'
+    printf '%s ' (__fish_vcs_prompt)
 
-	switch $USER
+    if not test $last_status -eq 0
+        set_color $fish_color_error
+    end
 
-	case root
+    echo -n "$suffix "
 
-		if not set -q __fish_prompt_cwd
-			if set -q fish_color_cwd_root
-				set -g __fish_prompt_cwd (set_color $fish_color_cwd_root)
-			else
-				set -g __fish_prompt_cwd (set_color $fish_color_cwd)
-			end
-		end
-
-	case '*'
-
-		if not set -q __fish_prompt_cwd
-			set -g __fish_prompt_cwd (set_color $fish_color_cwd)
-		end
-
-	end
-
-	set -l prompt_status
-	if test $last_status -ne 0
-		if not set -q __fish_prompt_status
-			set -g __fish_prompt_status (set_color $fish_color_status)
-		end
-		set prompt_status "$__fish_prompt_status [$last_status]$__fish_prompt_normal"
-	end
-
-	if not set -q __fish_prompt_user
-		set -g __fish_prompt_user (set_color $fish_color_user)
-	end
-	if not set -q __fish_prompt_host
-		set -g __fish_prompt_host (set_color $fish_color_host)
-	end
-
-	echo -n -s "$__fish_prompt_user" "$USER" "$__fish_prompt_normal" @ "$__fish_prompt_host" "$__fish_prompt_hostname" "$__fish_prompt_normal" ' ' "$__fish_prompt_cwd" (prompt_pwd) (__fish_git_prompt) "$__fish_prompt_normal" "$prompt_status" "$delim" ' '
+    set_color normal
 end
